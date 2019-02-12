@@ -1,32 +1,34 @@
-const path = require('path')
-
-/*** Archivos ***/
-const leerCarpeta = require('./Utilerias/OperadoresArchivos/leerCarpeta')
+const fs = require('fs')
 
 /*** Operadores de archivos ***/
-const filtro = require('./Utilerias/OperadoresArchivos/filtrarArchivos')
 const pcrArchivos = require('./Utilerias/OperadoresArchivos/procesadorArchivos')
 
 /*** Operadores de cadena ***/
-const regEx  = require('./Utilerias/RegEx/jsonRgx')
-const { denpendedor } = require('./Utilerias/OperarCadenas/remplazarCampoContenidoIntls')
-const carpeta = 'Archivos\\'
+const carpeta = 'Testing\\'
+const { listar } = require('./Utilerias/OperarCadenas/listas')
+const { operarCambio } = require('./Utilerias/OperarCadenas/cambiarContenidoCampo')
 
-//MultiArchivo
-leerCarpeta.obtenerArchivos(carpeta)
-    .then(archivos => {
-        filtro.filtrarExtensionManual(archivos, ['.frm']).forEach(archivo => {
-                //Mono archivo
-                denpendedor(
-                    archivo,
-                    true,
-                    false,
-                    ['Normal', 'm', 'l'],
-                    'VentanaTipoMarco',
-                    ['Forma', 'zonasAgentes'],
-                    'Sencillo'
-                )
-            
+fs.readdir(carpeta, (err, archivos) => {
+    if (err) {
+      throw err
+    } archivos.filter(archivo => {
+      return  /\.frm$/i.test(archivo) && fs.statSync(carpeta+archivo).isFile()
+    }).forEach(archivo => {
+
+        let respuesta = operarCambio(
+            carpeta + archivo,
+            'Normal',
+            'VentanaTipoMarco',
+            'Forma',
+            'Sencillo'
+        )
+
+        if (respuesta != false){
+            // Mono archivo
+            pcrArchivos.crearArchivo(carpeta + archivo, respuesta)
+        }
+
+        listar(carpeta + archivo)
+
         })
     })
-    .catch(e => console.error(e))
