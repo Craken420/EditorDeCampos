@@ -1,53 +1,53 @@
-/*** Modulos ***/
-const fs = require('fs')
-
 /*** Sub-modulos ***/
 
 /* Operadores de archivos */
+const { leerCarpetaFiltrada } = require('./Utilerias/OperadoresArchivos/readDirOnlyFile')
+
 const pcrArchivos = require('./Utilerias/OperadoresArchivos/procesadorArchivos')
 
 /* Operadores de cadena */
 const { extraerCmpLista } = require('./Utilerias/OperarCadenas/extraerCmpLista')
 const { operarCambio } = require('./Utilerias/OperarCadenas/cambiarContenidoCampo')
+
 const regEx  = require('./Utilerias/RegEx/jsonRgx')
 
-/*** Atributos ***/
-const carpeta = 'Testing\\'
+/*** Archivos ***/
+const { carpetas } = require('./Utilerias/Archivos/jsonCarpetas')
 
-/*** Operación ***/
-fs.readdir(carpeta, (err, archivos) => {
-    if (err) {
-      throw err
-    } archivos.filter(archivo => {
-      return /\.frm$/i.test(archivo) && fs.statSync(carpeta+archivo).isFile()
-    }).forEach(archivo => {
+leerCarpetaFiltrada(carpetas.carpetaTesting, '.frm')
+    .then(archivos => {
+        archivos.forEach(archivo => {
 
-        console.log(`------------------------------------------------------------------\n`)
-        console.log(`Archivo: \"${regEx.Borrar.clsRuta(archivo)}\"`)
+            console.log(`Archivo: \"${regEx.Borrar.clsRuta(archivo)}\"`)
+            pcrArchivos.agregarArchivo('Reporte.txt', 
+              `\n--------------------------------------------------------------------------------------\n`
+            + `Archivo: \"${regEx.Borrar.clsRuta(archivo)}\"`)
 
-        let respuesta = operarCambio(
-            carpeta + archivo,
-            'Normal',
-            'VentanaTipoMarco',
-            'Forma',
-            'Sencillo'
-        )
-
-        if (respuesta != false){
-            pcrArchivos.crearArchivo(carpeta + archivo, respuesta)
-        }
-
-        extraerCmpLista(carpeta + archivo).forEach(campoLista => {
+            pcrArchivos.agregarArchivo('Reporte.txt', `Archivo: \"${regEx.Borrar.clsRuta(archivo)}\"`)
             let respuesta = operarCambio(
-                        carpeta + archivo,
-                        'Negro',
-                        'FichaColorFondo',
-                        campoLista,
-                        'Plata'
+                archivo,
+                'Normal',
+                'VentanaTipoMarco',
+                'Forma',
+                'Sencillo'
             )
-            if (respuesta != false) {
-                pcrArchivos.crearArchivo(carpeta + archivo, respuesta)
+
+            if (respuesta != false){
+                pcrArchivos.crearArchivo(archivo, respuesta)
             }
+
+            extraerCmpLista(archivo).forEach(campoLista => {
+                let respuesta = operarCambio(
+                    archivo,
+                    'Negro',
+                    'FichaColorFondo',
+                    campoLista,
+                    'Plata'
+                )
+
+                if (respuesta != false) {
+                    pcrArchivos.crearArchivo(archivo, respuesta)
+                }
+            })
         })
-    })
-})
+    }).catch(e => console.error(e));
